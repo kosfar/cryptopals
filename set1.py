@@ -102,6 +102,24 @@ def score(text):
             s = s + 0.01
     return s
 
+def decipher_single_char_xored(cipher_text):
+    """
+    One hexadecimal digit represents a nibble (4 bits). A single byte is 2 hex digits ie FF, 00
+    Extended ASCII is an 8-bit character set. 2^8 equals 256, and as counting starts with 0,
+    the maximum ASCII char code has the value 255.
+    """
+    best_score = 0
+    p = ''
+    key = -1
+    for i in range(0,256):
+        c = xor_hex(cipher_text,(chr(i) * (len(cipher_text) / 2)).encode('hex'))
+        if score(c.decode('hex')) > best_score:
+            best_score = score(c.decode('hex'))
+            p = c.decode('hex').strip('\n')
+            key = i
+
+    return (p, key, best_score)
+
 def main():
     #s1c1
     s = '49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d'
@@ -119,22 +137,21 @@ def main():
         print "Set 1 - Challenge 2: ZoOong!!!!"
 
     #s1c3
-    # One hexadecimal digit represents a nibble (4 bits). A single byte is 2 hex digits ie FF, 00
-    # Extended ASCII is an 8-bit character set. 2^8 equals 256, and as counting starts with 0,
-    # the maximum ASCII char code has the value 255.
+    rtup = decipher_single_char_xored('1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736')
+    if rtup[2] > 0:
+        logger.info("Set 1 - Challenge 3: Plaintext: {}. Key: {} ('{}'). Woohoo!".format(rtup[0],rtup[1], chr(rtup[1])))
 
-    best_score = 0
-    p = ''
-    cipher_text = '1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736'
-    for i in range(0,256):
-        c = xor_hex(cipher_text,(chr(i) * (len(cipher_text) / 2)).encode('hex'))
-    #   print 'Text: {} / Score: {}'.format(c.decode('hex'), score(c.decode('hex')))
-        if score(c.decode('hex')) > best_score:
-            best_score = score(c.decode('hex'))
-            p = c.decode('hex')
-            key = i
+    #s1c4
+    arr = []
+    with open('s1c4.txt', 'r') as f:
+        for line in f:
+            rtup = decipher_single_char_xored(line.strip('\n'))
+            arr.append(rtup)
 
-    logger.info("Set 1 - Challenge 3: {}. Key was: {} ('{}'). Woohoo!".format(p,key, chr(key)))
+    arr_by_score = sorted(arr, key=lambda tup: tup[2], reverse = True)
+    winner_tup = arr_by_score[0]
+    if winner_tup[2] > 0:
+        logger.info("Set 1 - Challenge 4: Plaintext: {}. Key: {} ('{}'). Woohoo!".format(winner_tup[0],winner_tup[1], chr(winner_tup[1])))
 
 if __name__ == "__main__":
 	main()
